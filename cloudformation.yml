@@ -1,0 +1,79 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This cf template will stand up mongodb on an ec2 instance in a given vpc / subnet
+Parameters:
+
+  MongoDBSecurityGroupID:
+    Description: A valid security group id
+    Type: AWS::EC2::SecurityGroup::Id
+
+  IAMProfileID:
+    Description: ID of the MongoDB IAM Profile
+    Type: String
+
+  Subnet:
+    Description: Subnet Id
+    Type: String
+
+  InstanceType:
+    Description: Amazon EC2 instance type for the MongoDB nodes.
+    Type: String
+    Default: m4.large
+    AllowedValues:
+    - m4.large
+    - m4.xlarge
+
+  ImageId:
+    Description: AMI ID for Instance
+    Type: String
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: home
+    Description: Name of keypair, used for connecting to instance.
+      this KeyPair.
+
+  NodeName:
+    Description: Instance Name
+    Type: String
+
+Resources:
+
+  MongoNodeInstance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      HostRole: MongoDB Node
+    Properties:
+      KeyName: !Ref KeyName
+      ImageId: !Ref ImageId
+      IamInstanceProfile: !Ref IAMProfileID
+      Tags:
+      - Key: Name
+        Value: !Ref NodeName
+      SecurityGroupIds:
+        - !Ref MongoDBSecurityGroupID
+      SubnetId: !Ref Subnet
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdm"
+          Ebs:
+            VolumeType: "io1"
+            Iops: "200"
+            DeleteOnTermination: "false"
+            VolumeSize: "50"
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - "#!/bin/bash\n"
+            - "echo 'user data provisioning here'"
+      InstanceType: !Ref InstanceType
+
+Outputs:
+  NodeInstanceID:
+    Description: The Instance ID of the Mongo Node
+    Value:
+      Ref: MongoNodeInstance
+  NodeName:
+    Description: Node Name
+    Value:
+      Ref: NodeName

@@ -1,0 +1,27 @@
+version: "3.3"
+
+services:
+
+  webserver:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/web
+      - ./site.conf:/etc/nginx/conf.d/default.conf
+    links:
+      - php
+      - mongo
+      - redis
+
+  php:
+    build: .
+    image: ig_demo
+    volumes:
+      - ./web:/web
+
+  mongo:
+    image: mongo:3.4
+
+  redis:
+    image: redis:4.0
